@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XLSX-Populate en el Navegador</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-populate/browser/xlsx-populate.min.js"></script>
+</head>
+<body>
+    <input type="file" id="upload" />
+    <script>
+        document.getElementById('upload').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const arrayBuffer = e.target.result;
+                
+                XlsxPopulate.fromDataAsync(arrayBuffer)
+                    .then(workbook => {
+                        const sheet = workbook.sheet(0); // Primera hoja
+                        const cell = sheet.cell("A1");
+
+                        // Obtener estilo de la celda
+                        const style = cell.style();
+                        console.log("Fuente:", style.font());
+                        console.log("Relleno:", style.fill());
+                        console.log("Bordes:", style.border());
+                        console.log("Alineación:", style.alignment());
+
+                        // Modificar el estilo de la celda
+                        cell.style({
+                            fontColor: "ff0000",    // Cambiar color de la fuente a rojo
+                            bold: true,             // Poner la fuente en negrita
+                            italic: true,           // Poner la fuente en cursiva
+                            underline: true,        // Subrayar la fuente
+                            fill: { type: "solid", color: "00ff00" }  // Cambiar fondo a verde
+                        });
+
+                        // Descargar el archivo modificado
+                        return workbook.outputAsync("base64");
+                    })
+                    .then(data => {
+                        const link = document.createElement('a');
+                        link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + data;
+                        link.download = 'modified.xlsx';
+                        link.click();
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
